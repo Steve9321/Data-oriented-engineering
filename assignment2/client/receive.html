@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NSW Crime Data Import and Publication Service</title>
+</head>
+<body>
+<div id="main">
+    <h1>Authentication details:</h1>
+    <div >
+        <label>username:</label> <input type="text"  name='username' id="username"/>
+        </br>
+        <label>password:</label> <input type="text" name='password' id="password" />
+        <button name="Authbtn" id="Autnbtn" onclick="get_auth()">Submit</button>
+        </br>
+        <input type="text" id="token">
+    </div>
+    <h1>LGA Data Input:</h1>
+    <div>
+        <label>Postcode:</label> <input type="text"  name='postcode' id="postcode"/>
+        <button name="Btncode" id="Btncode" onclick="post_code()">Run</button>
+        </br>
+    </div>
+    <form method="POST" action="http://127.0.0.1:5000/createlga" role="form">
+        <label>lga name:</label> <input type="text" name='region' id="region" />
+        <button name="Regionbtn" id="Regionbtn" onsubmit="post_lga()">Run</button>
+        </br>
+    </form>
+    <textarea id="create_feedback" rows="4" cols="90"></textarea>
+    <br/>
+
+
+    <h1>Get the collections: </h1>
+    <!-- method="GET" action="http://127.0.0.1:5000/getall" role="form" -->
+    <form>
+        <label>Content Negotiation Option(JSON?):</label><input type="checkbox" name="region" value="regionsearch"  id='get_all_check'/>
+        <button name="Searchbtn" id="Searchbtn">Get Collection</button>
+        </br>
+    </form>
+    <textarea id="get_all_text" rows="4" cols="90"></textarea>
+    <br/>
+
+    <h1>Get a single LGA crime statics data: </h1>
+    <!--<form method="GET" role="form" action="http://127.0.0.1:5000/getinfo">-->
+    <form>
+        <label>Region of the data entry:</label> <input type="text"  name='regionsearch' id="regionsearch"/>
+        <label>Content Negotiation Option(JSON?):</label><form method="get"><input type="checkbox" name="check" value="1" id = 'get_content_check'/>
+        <button name="btnget" id="btnget">Get Collection</button>
+    </form>
+
+    <form>
+        <label>Region:</label> <input type="text" name='area' id="area" /><label>Year:</label><input type="text" name='year' id="year" />
+        <label>Content Negotiation Option(JSON?):</label><form method="get"><input type="checkbox" name="check1" value="1" id ="get_column_check"/>
+        <button name="filterbtn" id="filterbtn">Get Collection</button>
+    </form>
+    <textarea id="content" rows="6" cols="90"></textarea>
+    <h1>Delete document:</h1>
+    <form method="POST" role="form" name="deleting" id="deleting" action="http://127.0.0.1:5000/delete" onsubmit="delete_item()">
+        <label>Region name:</label> <input type="text"  name='nameDelete' id="nameDelete"/>
+        <button>Delete</button>
+    </form>
+    </br>
+</div>
+<script>
+    <!--window.onload = function (){-->
+    document.getElementById('btnget').addEventListener('click',get_content);
+    function get_content(e)
+    {
+        e.preventDefault();
+        let input = document.getElementById("regionsearch").value;
+        console.log(input)
+        let check_value = document.getElementById('get_content_check');
+        let myurl;
+        if (check_value.checked){
+            myurl = 'http://127.0.0.1:5000/getinfo_json?region='+input;
+        }else{
+            myurl = 'http://127.0.0.1:5000/getinfo?region='+input;
+        }
+        fetch(myurl).then((response) => response.text())
+            .then(function(data){
+                console.log(data);
+                let text = document.getElementById('content');
+                text.value = data;
+        });
+    }
+
+    function get_auth()
+    {
+        const myurl = 'http://127.0.0.1:5000/auth';
+
+        console.log(document.getElementById('username').value);
+        console.log(document.getElementById('password').value);
+        fetch(myurl + "?username="+document.getElementById('username').value + "&password="+document.getElementById('password').value, {
+            method: 'GET'
+        }).then((response) => response.json())
+        .then((text) => {console.log(text.token);
+           document.getElementById('token').value = text.token;
+        });
+    }
+
+    function post_code()
+    {
+        const myurl = 'http://127.0.0.1:5000/auth';
+
+        console.log(document.getElementById('username').value);
+        console.log(document.getElementById('password').value);
+        fetch(myurl + "?username="+document.getElementById('username').value + "&password="+document.getElementById('password').value, {
+            method: 'GET',
+        }).then((response) => response.json())
+        .then((text) => {console.log(text.token);
+           // document.getElementById('token').value = text.token;
+
+            const url = 'http://127.0.0.1:5000/createpostcode';
+            fetch(url, {
+                method: 'POST',
+                body: JSON.stringify({
+                    postcode: parseInt(document.getElementById('postcode').value),
+                }),
+                headers: {
+                'Content-Type' : 'application/json',
+                'AUTH_TOKEN': text.token
+                }
+            }).then((response) => response.text())
+            .then(function(data){
+                console.log(data);
+                let text = document.getElementById('create_feedback');
+                text.value = data;
+        });
+            <!--.then(function(response){-->
+                <!--console.log((response));-->
+            <!--});-->
+        });
+    }
+
+    function post_lga()
+    {
+        const myurl = 'http://127.0.0.1:5000/auth';
+
+        console.log(document.getElementById('username').value);
+        console.log(document.getElementById('password').value);
+        fetch(myurl + "?username="+document.getElementById('username').value + "&password="+document.getElementById('password').value, {
+            method: 'GET',
+        }).then((response) => response.json())
+        .then((text) => {console.log(text.token);
+           // document.getElementById('token').value = text.token;
+
+            const url = 'http://127.0.0.1:5000/createlga';
+            fetch(url, {
+                method: 'POST',
+                body: JSON.stringify({
+                    postcode: parseInt(document.getElementById('region').value),
+                }),
+                headers: {
+                'Content-Type' : 'application/json',
+                'AUTH_TOKEN': text.token
+                }
+            }).then((response) => response.text())
+            .then(function(data){
+                console.log(data);
+                let text = document.getElementById('create_feedback');
+                text.value = data;
+        });
+        });
+    }
+
+    <!--function post_lga()-->
+    <!--{-->
+        <!--const url = 'http://127.0.0.1:5000/createlga';-->
+        <!--fetch(url, {-->
+            <!--method: 'POST',-->
+            <!--body: JSON.stringify({-->
+                <!--region: document.getElementById('region').value-->
+            <!--}),-->
+            <!--headers: {-->
+            <!--'Content-Type' : 'application/json',-->
+            <!--'AUTH_TOKEN': document.getElementId('token').value-->
+            <!--}-->
+        <!--}).then((response) => response.text())-->
+            <!--.then(function(data){-->
+                <!--console.log(data);-->
+                <!--let text = document.getElementById('create_feedback');-->
+                <!--text.value = data;-->
+        <!--});-->
+        <!--&lt;!&ndash;.then(function(response){&ndash;&gt;-->
+            <!--&lt;!&ndash;console.log((response));&ndash;&gt;-->
+        <!--&lt;!&ndash;});&ndash;&gt;-->
+    <!--}-->
+
+    document.getElementById('Searchbtn').addEventListener('click',get_all_fun);
+    function get_all_fun(e)
+    {
+        e.preventDefault();
+        let check_value = document.getElementById('get_all_check');
+        let myurl;
+        if (check_value.checked){
+            <!--console.log('11');-->
+            myurl = 'http://127.0.0.1:5000/getall_json';
+        }else{
+            <!--console.log('22');-->
+            myurl = 'http://127.0.0.1:5000/getall';
+        }
+        console.log(myurl);
+
+        <!--const myurl = 'http://127.0.0.1:5000/getall';-->
+        fetch(myurl).then((response) => response.text())
+            .then(function(data){
+                console.log(data);
+                let text = document.getElementById('get_all_text');
+                text.value = data;
+            });
+    }
+
+    document.getElementById('filterbtn').addEventListener('click',filter_file);
+    function filter_file(e)
+    {
+        e.preventDefault();
+        let area = document.getElementById('area').value;
+        let year = document.getElementById('year').value;
+        let check_value = document.getElementById('get_column_check');
+        let myurl;
+        console.log(area);
+        console.log(year);
+        if (check_value.checked){
+            myurl = 'http://127.0.0.1:5000/filter_json?area='+area+'&year='+year;
+        }else{
+            myurl = 'http://127.0.0.1:5000/filter?area='+area+'&year='+year;
+        }
+        fetch(myurl).then((response) => response.text())
+            .then(function(data){
+                console.log(data);
+                let text = document.getElementById('content');
+                text.value = data;
+            });
+    }
+
+    function delete_item() {
+    var nameDelete = $(this).attr('nameDelete');
+    jQuery.ajax({
+        url: 'http://127.0.0.1:5000/delete/' + nameDelete,
+        headers: { 'X_CSRF_TOKEN': document.getElementId('token').value },
+        type: 'POST',
+        success: function(data) {
+            show_items();
+        }
+    });
+}
+<!--}-->
+</script>
+</body>
+</html>
